@@ -82,6 +82,19 @@ Key insights include:
 | Transformations | dbt |
 | Visualization | Looker Studio |
 
+
+## Pipeline Architecture
+
+```mermaid
+flowchart TD
+A[TfL Santander Cycles CSV] --> B[Airflow DAG]
+B --> C[GCS Data Lake]
+C --> D[PySpark Processing]
+D --> E[BigQuery Warehouse]
+E --> F[dbt Models]
+F --> G[Looker Studio Dashboard]
+```
+
 ---
 
 # 📈 Outcome
