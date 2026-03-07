@@ -1,50 +1,68 @@
-version: '3.8'
+x-airflow-common: &airflow-common
+  image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:2.8.1}
+  environment:
+    - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+    - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres/airflow
+    - AIRFLOW__CORE__FERNET_KEY=${AIRFLOW_CORE_FERNET_KEY}
+    - AIRFLOW__CORE__LOAD_EXAMPLES=False
+    - AIRFLOW__LOGGING__LOGGING_LEVEL=INFO
+    - GCP_PROJECT_ID=${GCP_PROJECT_ID}
+    - GCP_GCS_BUCKET=${GCP_GCS_BUCKET}
+    - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS}
+  volumes:
+    - ./data_loader/dags:/opt/airflow/dags
+    - ./data_loader/logs:/opt/airflow/logs
+    - ./data_loader/plugins:/opt/airflow/plugins
+    - ./scripts:/opt/airflow/scripts
+    - ./google_credentials.json:/tmp/google_credentials.json
+
 services:
-  airflow-webserver:
-    image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:2.8.1}
-    restart: always
-    network_mode: bridge
-    depends_on:
-      - postgres
-    environment:
-      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
-      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres/airflow
-      - AIRFLOW__CORE__FERNET_KEY=''
-      - AIRFLOW__CORE__LOAD_EXAMPLES=False
-      - AIRFLOW__CORE__LOGGING_LEVEL=INFO
-      - GCP_PROJECT_ID=${GCP_PROJECT_ID}
-      - GCP_GCS_BUCKET=${GCP_GCS_BUCKET}
-      - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS}
-    volumes:
-      - ./data_loader/dags:/opt/airflow/dags
-      - ./data_loader/logs:/opt/airflow/logs
-      - ./data_loader/plugins:/opt/airflow/plugins
-      - ./scripts:/opt/airflow/scripts
-      - ./google_credentials.json:/opt/airflow/google_credentials.json # Mapping your GCP key
-    ports:
-      - "8080:8080"
-    command: webserver
-
-  airflow-scheduler:
-    image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:2.8.1}
-    restart: always
-    depends_on:
-      - postgres
-    environment:
-      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
-      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres/airflow
-      - AIRFLOW__CORE__LOAD_EXAMPLES=False
-    volumes:
-      - ./data_loader/dags:/opt/airflow/dags
-      - ./data_loader/logs:/opt/airflow/logs
-      - ./google_credentials.json:/opt/airflow/google_credentials.json
-    command: scheduler
-
   postgres:
-    image: postgres:13
+    image: postgres:17.9
     environment:
       - POSTGRES_USER=airflow
       - POSTGRES_PASSWORD=airflow
       - POSTGRES_DB=airflow
     ports:
       - "5432:5432"
+    volumes:
+      - postgres-db-volume:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 5s
+      retries: 5
+
+  airflow-init:
+    <<: *airflow-common
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: >
+      bash -c "airflow db migrate &&
+      airflow users create --username admin --password admin --firstname Admin --lastname User --role Admin --email admin@example.com"
+    restart: on-failure
+
+  airflow-webserver:
+    <<: *airflow-common
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+      airflow-init:
+        condition: service_completed_successfully
+    ports:
+      - "8080:8080"
+    command: webserver
+
+  airflow-scheduler:
+    <<: *airflow-common
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+      airflow-init:
+        condition: service_completed_successfully
+    command: scheduler
+
+volumes:
+  postgres-db-volume:
