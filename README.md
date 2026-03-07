@@ -174,6 +174,40 @@ A **Kimball-style star schema** is built using **dbt**:
 
 ---
 
+## Project Structure
+
+```
+london-bikes-data-engineering/
+│
+├── data_loader/
+│   ├── dags/                     # Airflow DAG definitions
+│   │   └── santander_pipeline.py
+│   │
+│   └── scripts/                  # Data ingestion scripts
+│       ├── extract_tfl_data.py
+│       └── upload_to_gcs.py
+│
+├── spark/                        # PySpark transformation jobs
+│   └── transform_trips.py
+│
+├── dbt/                          # Analytics models
+│   ├── models/
+│   │   ├── staging/
+│   │   └── marts/
+│   └── dbt_project.yml
+│
+├── terraform/                    # Infrastructure as Code
+│   ├── main.tf
+│   ├── variables.tf
+│   └── outputs.tf
+│
+├── docker-compose.yaml           # Local Airflow environment
+├── commands.md                   # Useful project commands
+├── .env                          # Environment variables
+├── .gitignore
+└── README.md
+```
+
 ## Dashboard (Looker Studio)
 
 The dashboard visualises system usage patterns and operational insights
