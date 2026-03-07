@@ -1,79 +1,169 @@
-# 🚲 TfL Santander Cycles Data Engineering Pipeline
-An end-to-end batch data pipeline orchestrating 30M+ rows of historical TfL Santander Cycles data using Apache Airflow, PySpark, dbt, Terraform, and GCP to optimize fleet rebalancing.
+# 🚲 TfL Santander Cycles — Batch Data Pipeline
 
+## Problem Statement
 
+Transport for London publishes Santander Cycles trip data as a series of fragmented, historically versioned CSV files on a public web server.
 
-## Project Description
+While the data is publicly accessible, it is not directly usable for analysis at scale due to several engineering challenges:
 
-Transport for London (TfL) generates **millions of rows of Santander Cycles trip data each year**.  
-However, the data is published as **fragmented, historically versioned CSV files** on a public web server.
+- Files are spread across multiple URLs with no unified API
+- Total data volume spans years of trip records across thousands of docking stations
+- The schema changed in 2022 with the introduction of E-bikes, breaking naive ingestion approaches
+- Raw CSV files are unpartitioned and cannot be queried efficiently
 
-This creates several engineering challenges:
-
-- Data is **spread across multiple CSV files**
-- Total volume reaches **tens of millions of rows**
-- The **schema evolves over time** (e.g., the introduction of E-bikes in 2022)
-- Raw files are **not directly queryable at scale**
-
-To solve this, I built a **fully automated batch data pipeline** that ingests, processes, and models **three years of post-pandemic TfL data (2023–2025)** using modern data engineering tools.
+This project builds a fully automated **batch data pipeline** that solves these challenges by ingesting, processing, and modelling three years of post-pandemic TfL data (2023–2025).
 
 ---
 
-# 🏗 Pipeline Architecture
+## Pipeline Architecture
 
-The pipeline automates the full lifecycle from raw ingestion to analytics-ready datasets.
+The pipeline follows a modern data engineering architecture composed of
+a cloud data lake, distributed processing layer, data warehouse, and
+analytics layer.
 
-### Infrastructure as Code
-- Provisioned the **Google Cloud Storage (GCS) Data Lake** and **BigQuery Data Warehouse**
-- Infrastructure defined using **Terraform** for reproducibility
+### Conceptual Flow
 
-### Workflow Orchestration
-- Built **Apache Airflow DAGs** to automate:
-  - Extraction of CSV files from the public TfL web server
-  - Loading raw data into the **GCS Data Lake**
+TfL Santander Cycles trip data is published as fragmented CSV files on a public server.  
+Apache Airflow orchestrates the ingestion and processing workflow.
 
-### Distributed Processing
-- Used **PySpark** to:
-  - Clean and standardize trip records
-  - Handle schema changes (including E-bike introduction)
-  - Convert raw CSVs into **compressed Parquet files**
-  - Partition datasets for efficient downstream querying
+The pipeline performs the following steps:
 
-### Data Warehouse & Modeling
-- Loaded curated Parquet datasets into **BigQuery**
-- Built a **Kimball-style Star Schema** using **dbt**
+1. Download raw CSV trip data from the TfL data source
+2. Upload raw datasets to the Google Cloud Storage data lake
+3. Process and clean the data using PySpark
+4. Convert CSV files into partitioned Parquet datasets
+5. Load curated data into BigQuery
+6. Transform data using dbt to create a star schema
+7. Power analytics through a Looker Studio dashboard
 
-Tables include:
+### Architecture Diagram
 
-- **fact_trips** — trip-level transactional data  
-- **dim_stations** — docking station metadata
 
-This modeling approach enables **fast analytical queries** and scalable reporting.
+```mermaid
+
+flowchart TD
+
+A[TfL Santander Cycles CSV Files]
+--> B[Apache Airflow DAG]
+
+B --> C[Download & Validate Data Scripts]
+
+C --> D[GCS Data Lake - Raw Layer]
+
+D --> E[PySpark Processing]
+
+E --> F[GCS Processed Layer - Parquet]
+
+F --> G[BigQuery Data Warehouse]
+
+G --> H[dbt Models - Star Schema]
+
+H --> I[Looker Studio Dashboard]
+```
+
+
+## Infrastructure (Terraform + GCP)
+
+Google Cloud infrastructure is provisioned using **Terraform** to ensure the platform is reproducible and version-controlled.
+
+Resources include:
+
+- **Google Cloud Storage (GCS)** — Data lake for raw and processed datasets  
+- **BigQuery** — Data warehouse for analytics and reporting  
 
 ---
 
-# 📊 Business Impact
 
-The pipeline enables actionable analytics through a **Looker Studio dashboard**.
+## Workflow Orchestration
 
-Key insights include:
+```mermaid
+flowchart TD
 
-### 🚴 Bike Rebalancing Analysis
-- Calculates **hourly Net Flow of bikes**
-- Identifies **stations that drain empty during morning rush hour**
-- Helps TfL optimize **bike redistribution logistics**
+A[extract_tfl_data]
+--> B[upload_raw_to_gcs]
 
-### ⚡ E-Bike Adoption Tracking
-- Monitors **usage and growth of the E-bike fleet**
-- Tracks **return on investment (ROI)** for the new system
-- Supports strategic decisions about **future fleet expansion**
+B --> C[spark_transform_trips]
+
+C --> D[load_bigquery_tables]
+
+D --> E[run_dbt_models]
+
+```
+
+An **Apache Airflow DAG** orchestrates the full batch pipeline:
+
+1. Download CSV files from the TfL public data server  
+2. Upload raw datasets to the GCS data lake  
+3. Trigger PySpark transformation jobs  
+4. Load curated datasets into BigQuery  
+5. Execute dbt models to build analytics tables  
 
 ---
 
-# 🛠 Tech Stack
+## Batch Processing (PySpark)
 
-| Category | Tools |
-|--------|------|
+PySpark performs distributed processing on the raw datasets:
+
+- Cleaning and validating trip records
+- Standardising schemas across historical changes (including E-bike introduction)
+- Converting CSV datasets into **partitioned Parquet files**
+- Preparing optimized datasets for warehouse ingestion
+
+---
+
+## Data Warehouse (BigQuery + dbt)
+
+Processed Parquet files are loaded into **BigQuery**.
+
+Tables are optimized using:
+
+- **Partitioning by trip date**
+- **Clustering by station ID**
+
+This improves performance for analytical queries used in dashboards.
+---
+
+## Data Model
+
+```mermaid
+
+erDiagram
+
+FACT_TRIPS {
+    string trip_id
+    datetime start_time
+    datetime end_time
+    int duration
+    string start_station_id
+    string end_station_id
+    string bike_type
+}
+
+DIM_STATIONS {
+    string station_id
+    string station_name
+    float latitude
+    float longitude
+    int capacity
+}
+
+FACT_TRIPS }o--|| DIM_STATIONS : start_station_id
+FACT_TRIPS }o--|| DIM_STATIONS : end_station_id
+
+```
+A **Kimball-style star schema** is built using **dbt**:
+
+
+- **fact_trips** — trip-level transactional records  
+- **dim_stations** — docking station metadata  
+
+---
+
+
+## Tech Stack
+
+| Layer | Technology |
+|------|------------|
 | Infrastructure | Terraform |
 | Orchestration | Apache Airflow |
 | Processing | PySpark |
@@ -82,21 +172,22 @@ Key insights include:
 | Transformations | dbt |
 | Visualization | Looker Studio |
 
-
-## Pipeline Architecture
-
-```mermaid
-flowchart TD
-A[TfL Santander Cycles CSV] --> B[Airflow DAG]
-B --> C[GCS Data Lake]
-C --> D[PySpark Processing]
-D --> E[BigQuery Warehouse]
-E --> F[dbt Models]
-F --> G[Looker Studio Dashboard]
-```
-
 ---
 
-# 📈 Outcome
+## Dashboard (Looker Studio)
 
-This project demonstrates how modern data engineering tools can transform **raw, fragmented public data into a scalable analytics platform**, enabling **data-driven decision making for urban mobility systems**.
+The dashboard visualises system usage patterns and operational insights
+for the Santander Cycles network.
+
+
+The dashboard contains two tiles:
+
+1. **Temporal Distribution**  
+   Trip volume over time, highlighting peak demand periods.
+
+2. **Categorical Distribution**  
+   Net bike flow by station, identifying rebalancing hotspots and comparing **E-bike vs standard bike usage**.
+
+
+
+---
