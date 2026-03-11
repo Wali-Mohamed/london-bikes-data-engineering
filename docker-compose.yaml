@@ -13,7 +13,7 @@ x-airflow-common: &airflow-common
     - ./data_loader/dags:/opt/airflow/dags
     - ./data_loader/logs:/opt/airflow/logs
     - ./data_loader/plugins:/opt/airflow/plugins
-    - ./scripts:/opt/airflow/scripts
+    - ./data_loader/scripts:/opt/airflow/scripts
     - ./google_credentials.json:/tmp/google_credentials.json
 
 services:

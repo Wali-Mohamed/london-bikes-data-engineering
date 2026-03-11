@@ -11,10 +11,56 @@ While the data is publicly accessible, it is not directly usable for analysis at
 - The schema changed in 2022 with the introduction of E-bikes, breaking naive ingestion approaches
 - Raw CSV files are unpartitioned and cannot be queried efficiently
 
-This project builds a fully automated **batch data pipeline** that solves these challenges by ingesting, processing, and modelling three years of post-pandemic TfL data (2023–2025).
+This project builds a fully automated batch data pipeline that ingests,
+processes, and models the historical TfL Santander Cycles journey dataset
+for large-scale analytics.
 
 ---
+## Data Source
 
+This project uses the **Santander Cycles journey dataset** published by Transport for London (TfL).
+
+The dataset contains historical trip records for the Santander Cycles bike-sharing system in London.  
+Each record represents a completed bike journey and includes information such as:
+
+- Rental start and end times
+- Start and end docking stations
+- Trip duration
+- Bike identifiers
+
+The raw CSV files are publicly available through the TfL Open Data portal and are hosted in a public object storage bucket.
+
+Data portal:  
+https://cycling.data.tfl.gov.uk/
+
+In this project, the ingestion pipeline queries the underlying storage API to automatically discover and download the available CSV files before processing them through the data pipeline.
+
+Source: Transport for London Open Data
+
+---
+## Dataset Scale
+
+The ingestion pipeline automatically discovers and downloads all available
+CSV journey extracts from the TfL open data storage bucket.
+
+The dataset processed in this project contains:
+
+| Metric | Value |
+|------|------|
+| Raw files | **451 CSV files** |
+| Raw dataset size | **~14 GB** |
+| Processed dataset size | **~1.4 GB (Parquet)** |
+| Total records | **105,707,738 trips** |
+| Compression improvement | **~10× reduction** |
+
+The raw dataset required schema detection and normalization across
+historical exports before it could be used for analytics.
+
+The pipeline standardizes column names, resolves data type inconsistencies,
+and converts inefficient row-based CSV files into columnar Parquet datasets
+optimized for large-scale analytical workloads.
+
+---
 ## Pipeline Architecture
 
 The pipeline follows a modern data engineering architecture composed of
@@ -43,7 +89,7 @@ The pipeline performs the following steps:
 
 flowchart TD
 
-A[TfL Santander Cycles CSV Files]
+A[TfL Santander Cycles S3 Bucket<br>CSV Files]
 --> B[Apache Airflow DAG]
 
 B --> C[Download & Validate Data Scripts]
@@ -181,7 +227,7 @@ london-bikes-data-engineering/
 │
 ├── data_loader/
 │   ├── dags/                     # Airflow DAG definitions
-│   │   └── santander_pipeline.py
+│   │   └── tfl_bike_ingestion.py
 │   │
 │   └── scripts/                  # Data ingestion scripts
 │       ├── extract_tfl_data.py
@@ -225,3 +271,25 @@ The dashboard contains two tiles:
 
 
 ---
+## Run the pipeline
+
+1. Clone repo
+
+git clone https://github.com/username/london-bikes-pipeline
+
+2. Create environment
+
+uv sync
+
+3. Start services
+
+docker compose up -d
+
+4. Run terraform
+
+terraform init
+terraform apply
+
+5. Run airflow DAG
+
+open http://localhost:8080

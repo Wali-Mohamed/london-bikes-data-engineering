@@ -1,3 +1,13 @@
 .env
 *.json
 *.xlsx
+
+
+# data
+data/
+*.csv
+*.parquet
+
+# large files
+*.zip
+*.gz
