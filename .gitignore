@@ -3,11 +3,72 @@
 *.xlsx
 
 
-# data
+# -----------------------------
+# DATA (never commit datasets)
+# -----------------------------
 data/
 *.csv
 *.parquet
-
-# large files
 *.zip
 *.gz
+
+# -----------------------------
+# PYTHON ENVIRONMENTS
+# -----------------------------
+.venv/
+venv/
+env/
+
+# -----------------------------
+# PYTHON CACHE
+# -----------------------------
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# -----------------------------
+# JUPYTER
+# -----------------------------
+.ipynb_checkpoints/
+
+# -----------------------------
+# AIRFLOW
+# -----------------------------
+data_loader/logs/
+airflow/logs/
+
+# -----------------------------
+# TERRAFORM
+# -----------------------------
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.backup
+*.tfstate
+*.tfstate.backup
+crash.log
+
+# -----------------------------
+# IDE / EDITOR
+# -----------------------------
+.vscode/
+.idea/
+
+# -----------------------------
+# OS FILES
+# -----------------------------
+.DS_Store
+Thumbs.db
+
+# -----------------------------
+# SECRETS / CREDENTIALS
+# -----------------------------
+google_credentials.json
+*.key
+*.pem
+
+# -----------------------------
+# BUILD / TEMP FILES
+# -----------------------------
+tmp/
+temp/
