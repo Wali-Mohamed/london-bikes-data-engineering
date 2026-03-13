@@ -8,17 +8,16 @@ clean_path.mkdir(exist_ok=True)
 
 for file in raw_path.glob("*.csv"):
 
-    
     df = pl.read_csv(
-    file,
-    infer_schema_length=10000,
-    schema_overrides={
-        "End station number": pl.Utf8,
-        "Start station number": pl.Utf8,
-        "StartStation Id": pl.Utf8,
-        "EndStation Id": pl.Utf8
-    }
-)
+        file,
+        infer_schema_length=10000,
+        schema_overrides={
+            "End station number": pl.Utf8,
+            "Start station number": pl.Utf8,
+            "StartStation Id": pl.Utf8,
+            "EndStation Id": pl.Utf8
+        }
+    )
 
     rename_map = {
         "Rental Id": "ride_id",
@@ -43,10 +42,21 @@ for file in raw_path.glob("*.csv"):
         "Total duration": "duration_seconds",
     }
 
-    # rename only existing columns
+    # rename only columns that exist
     valid_map = {k: v for k, v in rename_map.items() if k in df.columns}
-
     df = df.rename(valid_map)
 
+    # FORCE TYPES (this prevents schema drift)
+    # FORCE TYPES (prevents schema drift)
+    if "duration_seconds" in df.columns:
+        df = df.with_columns(
+            pl.col("duration_seconds").cast(pl.Int64, strict=False)
+        )
+
+    if "bike_id" in df.columns:
+        df = df.with_columns(
+            pl.col("bike_id").cast(pl.Int64, strict=False)
+        )
     df.write_parquet(clean_path / f"{file.stem}.parquet")
-    print(f'written {file.stem}.parquet')
+
+    print(f"written {file.stem}.parquet")
