@@ -91,8 +91,8 @@ for file in raw_path.glob("*.csv"):
     df = df.with_columns([
     pl.col("ride_id").cast(pl.Int64, strict=False),
     pl.col("bike_id").cast(pl.Int64, strict=False),
-    pl.col("duration_seconds").cast(pl.Int64, strict=False),
-
+   
+    pl.col("duration_seconds").cast(pl.Utf8),
     pl.col("start_station_id").cast(pl.Utf8),
     pl.col("end_station_id").cast(pl.Utf8),
 

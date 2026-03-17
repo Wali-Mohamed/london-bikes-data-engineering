@@ -14,3 +14,6 @@ Check how many different schemas exist in the raw TfL CSV files.
 ```bash
 head -q -n 1 data/raw/*.csv | sort | uniq -c
 ```
+```bash
+rm -rf data/clean
+```
