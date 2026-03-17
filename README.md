@@ -1,5 +1,7 @@
 # 🚲 TfL Santander Cycles — Batch Data Pipeline
 
+> Built a production-style Spark pipeline processing 100M+ bike trips, resolving schema drift, inconsistent timestamp formats, and data loss issues.
+
 ## Problem Statement
 
 Transport for London publishes Santander Cycles trip data as a series of fragmented, historically versioned CSV files on a public web server.
@@ -106,7 +108,81 @@ G --> H[dbt Models - Star Schema]
 
 H --> I[Looker Studio Dashboard]
 ```
+## ⚠️ Real-World Challenges & Solutions
 
+This project involved handling several real-world data engineering issues that are commonly encountered in production pipelines.
+
+---
+
+### 1. Schema Drift in `duration_seconds`
+
+**Problem**  
+The `duration_seconds` column contained inconsistent formats across historical datasets:
+- Numeric values (e.g. `360`)
+- String values (e.g. `"1h 43m 42s"`)
+
+This caused schema inference issues and broke aggregations.
+
+**Solution**  
+- Applied regex-based parsing to extract hours, minutes, and seconds  
+- Converted all values into a unified numeric (seconds) format  
+- Enforced consistent schema during transformation  
+
+---
+
+### 2. Inconsistent Timestamp Formats → Data Loss
+
+**Problem**  
+Multiple timestamp formats existed across files:
+- `yyyy-MM-dd HH:mm:ss`
+- `dd/MM/yyyy HH:mm`
+
+Initial parsing produced **null timestamps**, which silently removed large portions of data (notably years 2023–2025).
+
+**Solution**  
+- Used `coalesce(to_timestamp(...))` across multiple formats  
+- Standardised timestamps into a single format  
+- Recovered missing records through reprocessing  
+
+---
+
+### 3. Silent Data Loss Detection
+
+**Problem**  
+Data appeared processed successfully, but entire year ranges were missing due to parsing failures.
+
+**Solution**  
+Implemented validation checks:
+- Record counts before vs after transformations  
+- Year-by-year distribution checks  
+- Null value monitoring on critical columns  
+
+---
+
+### 4. Spark Performance & Stability Issues
+
+**Problem**  
+- Spark jobs occasionally hung due to resource constraints (WSL environment)  
+- Long runtime (~1 hour)
+
+**Solution**  
+- Controlled partition sizes to reduce shuffle pressure  
+- Used `.cache()` strategically for reused DataFrames  
+- Ensured proper shutdown with `spark.stop()`  
+- Identified and terminated orphaned Spark/Java processes  
+
+---
+
+### 5. Partitioning Strategy for Performance
+
+**Problem**  
+Raw CSV files were unpartitioned and inefficient for analytical queries.
+
+**Solution**  
+- Partitioned curated datasets by `year` and `month`  
+- Improved query performance and reduced data scan size  
+
+---
 
 ## Infrastructure (Terraform + GCP)
 
