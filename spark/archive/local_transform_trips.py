@@ -79,6 +79,11 @@ df = df.withColumn("hour", hour("start_time"))
 
 df = df.cache()
 df.count() 
+
+df.write \
+    .mode("overwrite") \
+    .partitionBy("year", "month") \
+    .parquet("data/curated/trips")
 df.groupBy("year").count().orderBy("year").show()
 # aggregation example
 trips_by_hour = df.groupBy("year", "month", "hour").count()
