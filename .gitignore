@@ -16,7 +16,7 @@ google_credentials.json
 
 # -----------------------------
 
-data/
+data/raw/*
 *.csv
 *.parquet
 *.zip
