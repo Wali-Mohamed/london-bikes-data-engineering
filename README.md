@@ -336,7 +336,16 @@ A **Kimball-style star schema** is built using **dbt**:
 **dim_stations** — Docking station metadata, including lifetime trips originated from each location.
 
 ---
+### ✅ Build & Test Success
+The following screenshot confirms that the dbt pipeline executed successfully in dbt Cloud, passing all schema tests and materializing the Star Schema in BigQuery.
 
+![dbt Build Success](dbt/images/dbt_success.jpg)
+
+### 📈 Data Lineage
+This graph illustrates the transformation flow from raw staging tables to the final dimensions and monthly fact aggregates.
+
+![dbt Lineage Graph](dbt/images/dbt_tables.jpg)
+---
 
 ## Tech Stack
 
