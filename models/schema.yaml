@@ -1,0 +1,19 @@
+version: 2
+
+models:
+  - name: stg_trips
+    description: "Staging table for London Bicycle trips (105M rows)"
+    columns:
+      - name: start_time
+        tests:
+          - not_null
+      - name: start_station_id
+        tests:
+          - not_null
+
+  - name: fact_monthly_trips
+    description: "Aggregated monthly trips for dashboarding"
+    columns:
+      - name: total_trips
+        tests:
+          - not_null
