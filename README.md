@@ -262,51 +262,78 @@ GROUP BY 1;
 | Stage 2: Partitioned | DAY(start_time)          | 94.84 MB                     | 95.5% Saved              |
 | Stage 3: Clustered   | start_station_id         | 93.13 MB                     | 95.6% Total Saving       |
 
-### 📊 Performance Impact (Verified via Dry Run)
-The following metrics represent a query for a single day of bike trips across 800+ stations:
 
+---
+## 📊 Analytics Engineering with dbt
 
-| Metric | Unoptimized Table (`trips`) | Optimized Table (`trips_v1`) | Improvement |
-|:---|:---|:---|:---|
-| **Data Scanned** | ~14.2 GB | ~190 MB | **98.6% Cost Reduction** |
-| **Execution Logic** | Full Table Scan | Partition Pruning + Cluster Metadata | **Optimized IO** |
-| **Query Performance** | ~3.4s | ~0.7s | **~5x Faster** |
+### Project Overview
+This project transforms raw bicycle trip data into a clean, tested Star Schema ready for Analysis. The final pipeline processes approximately **105 Million rows** of historical trip data.
+
+### Data Model (Star Schema)
+I refactored the project structure into a dedicated `/dbt` subdirectory to follow mono-repo best practices. The models are organized into a standard layered architecture:
+
+* **Staging (`stg_trips`):** Sanitizes inputs, casts data types, and filters out invalid records (e.g., trips missing `start_station_id`). This ensures the downstream models operate on trustworthy data.
+* **Dimensions (`dim_stations`):** A unique list of all start and end stations, serving as the "Who" and "Where" of our analysis.
+* **Facts (`fact_monthly_trips`):** The core metric table, aggregating trip counts, durations, and distinct station usage on a monthly grain.
+
+### Pipeline Integrity & Testing
+To ensure the 105M row dataset remains reliable, I implemented automated data quality tests in `schema.yml`. Every execution of the pipeline verifies:
+* `not_null`: Ensures critical linking keys like `start_station_id` and `start_time` are populated.
+* `unique`: Confirms the station dimension has no duplicate records.
+
+### Lineage and Execution Success
+The following image demonstrates the successful execution of the entire pipeline, including the green checkmarks for all model builds and data quality tests. This proves the end-to-end integrity of the 105M row transformation.
+
+![dbt Build Success](https://github.com/[YOUR-USERNAME]/[YOUR-REPO]/blob/main/images/dbt_build_success.png?raw=true)
+
+> **Pro-Tip:** Remember to replace `[YOUR-USERNAME]` and `[YOUR-REPO]` with your actual GitHub details!
 
 ---
 
+### How to Reproduce this Project
+
+#### Prerequisites
+1.  A Google Cloud Project with BigQuery enabled.
+2.  The raw London Bicycle Trips dataset loaded into a BigQuery dataset (e.g., `london_bicycles_raw`).
+3.  A dbt Cloud account connected to your BigQuery project.
+
+#### Execution Steps
+1.  Clone this r---epository.
+2.  In dbt Cloud, ensure your **Project Subdirectory** is set to `dbt`.
+3.  Run the following command in the dbt Cloud IDE to build and test the entire Star Schema:
+    ```bash
+    dbt build
+    ```
+---
 ## Data Model
 
 ```mermaid
 
 erDiagram
 
-FACT_TRIPS {
-    string trip_id
-    datetime start_time
-    datetime end_time
-    int duration
-    string start_station_id
-    string end_station_id
-    string bike_type
-}
+    FACT_MONTHLY_TRIPS {
+            date trip_month
+            string start_station_id FK
+            int total_trips
+            float avg_duration
+    }
 
-DIM_STATIONS {
-    string station_id
-    string station_name
-    float latitude
-    float longitude
-    int capacity
-}
+    DIM_STATIONS {
+        string station_key PK
+        string start_station_name
+        int lifetime_trips_originated
+    }
 
-FACT_TRIPS }o--|| DIM_STATIONS : start_station_id
-FACT_TRIPS }o--|| DIM_STATIONS : end_station_id
+    FACT_MONTHLY_TRIPS }o--|| DIM_STATIONS : "joins on start_station_id = station_key"
 
 ```
+
+
 A **Kimball-style star schema** is built using **dbt**:
 
+**fact_monthly_trips** — Monthly aggregates of trip volume and average duration.
 
-- **fact_trips** — trip-level transactional records  
-- **dim_stations** — docking station metadata  
+**dim_stations** — Docking station metadata, including lifetime trips originated from each location.
 
 ---
 
