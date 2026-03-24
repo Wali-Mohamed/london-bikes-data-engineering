@@ -17,13 +17,17 @@ google_credentials.json
 # -----------------------------
 
 data/raw/*
+data/clean
+data/curated
 *.csv
 *.parquet
+*.parquet.crc
 *.zip
 *.gz
 *.xlsx
 *.json
-
+# 2. Add an EXCEPTION for .gitkeep files (using the ! symbol)
+!data/raw/.gitkeep
 # -----------------------------
 
 # PYTHON ENVIRONMENTS
