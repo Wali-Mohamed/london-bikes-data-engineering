@@ -1,5 +1,6 @@
 x-airflow-common: &airflow-common
-  image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:2.8.1}
+  build: .
+  image: custom-airflow-uv:latest
   environment:
     - AIRFLOW__CORE__EXECUTOR=LocalExecutor
     - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres/airflow
@@ -14,6 +15,7 @@ x-airflow-common: &airflow-common
     - ./data_loader/logs:/opt/airflow/logs
     - ./data_loader/plugins:/opt/airflow/plugins
     - ./data_loader/scripts:/opt/airflow/scripts
+    - ./spark:/opt/airflow/spark
     - ./google_credentials.json:/tmp/google_credentials.json
 
 services:
