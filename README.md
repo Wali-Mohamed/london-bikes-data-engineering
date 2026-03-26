@@ -264,68 +264,55 @@ GROUP BY 1;
 
 
 ---
-## 📊 Analytics Engineering with dbt
+## Analytics Engineering with dbt : 105M Row dbt Pipeline 
 
-### Project Overview
-This project transforms raw bicycle trip data into a clean, tested Star Schema ready for Analysis. The final pipeline processes approximately **105 Million rows** of historical trip data.
-
-### Data Model (Star Schema)
-I refactored the project structure into a dedicated `/dbt` subdirectory to follow mono-repo best practices. The models are organized into a standard layered architecture:
-
-* **Staging (`stg_trips`):** Sanitizes inputs, casts data types, and filters out invalid records (e.g., trips missing `start_station_id`). This ensures the downstream models operate on trustworthy data.
-* **Dimensions (`dim_stations`):** A unique list of all start and end stations, serving as the "Who" and "Where" of our analysis.
-* **Facts (`fact_monthly_trips`):** The core metric table, aggregating trip counts, durations, and distinct station usage on a monthly grain.
-
-### Pipeline Integrity & Testing
-To ensure the 105M row dataset remains reliable, I implemented automated data quality tests in `schema.yml`. Every execution of the pipeline verifies:
-* `not_null`: Ensures critical linking keys like `start_station_id` and `start_time` are populated.
-* `unique`: Confirms the station dimension has no duplicate records.
-
-### Lineage and Execution Success
-The following image demonstrates the successful execution of the entire pipeline, including the green checkmarks for all model builds and data quality tests. This proves the end-to-end integrity of the 105M row transformation.
-
-![dbt Build Success](https://github.com/[YOUR-USERNAME]/[YOUR-REPO]/blob/main/images/dbt_build_success.png?raw=true)
-
-> **Pro-Tip:** Remember to replace `[YOUR-USERNAME]` and `[YOUR-REPO]` with your actual GitHub details!
+## Project Overview
+This project transforms 105 million rows of raw London Bicycle trip data into a production-grade Star Schema. By refactoring the architecture into a dedicated `/dbt` subdirectory, the pipeline follows mono-repo best practices, isolating transformation logic from orchestration and infrastructure.
 
 ---
 
-### How to Reproduce this Project
+## 📊 Interactive Analytics Dashboard
+**View Live Looker Studio Report**
 
-#### Prerequisites
-1.  A Google Cloud Project with BigQuery enabled.
-2.  The raw London Bicycle Trips dataset loaded into a BigQuery dataset (e.g., `london_bicycles_raw`).
-3.  A dbt Cloud account connected to your BigQuery project.
+Explore decade-long trends, station popularity rankings, and geographic performance diagnostics.
 
-#### Execution Steps
-1.  Clone this r---epository.
-2.  In dbt Cloud, ensure your **Project Subdirectory** is set to `dbt`.
-3.  Run the following command in the dbt Cloud IDE to build and test the entire Star Schema:
-    ```bash
-    dbt build
-    ```
 ---
-## Data Model
 
-```mermaid
+## Data Model (Medallion Architecture)
+I implemented a three-layer transformation strategy to ensure scalability and performance:
 
-erDiagram
+- **Staging (`stg_trips`)**: Sanitizes 105M rows of raw input, handles type casting, and filters invalid records to ensure downstream integrity.
 
-    FACT_MONTHLY_TRIPS {
-            date trip_month
-            string start_station_id FK
-            int total_trips
-            float avg_duration
-    }
+- **Dimensions (`dim_stations`)**: Extracts station metadata and utilizes regex-style string parsing to categorize stations into geographic "Areas" (e.g., Central, West).
 
-    DIM_STATIONS {
-        string station_key PK
-        string start_station_name
-        int lifetime_trips_originated
-    }
+- **Marts (`fact_monthly_trips`)**: Aggregates core metrics—trip counts, average durations, and total hours used—at a monthly grain for high-speed querying.
 
-    FACT_MONTHLY_TRIPS }o--|| DIM_STATIONS : "joins on start_station_id = station_key"
+- **Reporting (`rpt_monthly_station_performance`)**: The "Gold" layer. A pre-joined table that combines facts and dimensions, optimized specifically for the Looker Studio scatter plots and station rankings.
+![dbt Lineage Graph](dbt/images/dbt_tables.jpg)
+---
 
+## Pipeline Integrity & Lineage
+To maintain the reliability of a 105M row dataset, I implemented automated data quality gates via `sources.yml` and `schema.yml`.
+
+---
+
+## Automated Testing
+Every execution verifies:
+
+- **not_null**: Ensures critical keys like `station_key` and `start_time` are always populated.
+
+- **unique**: Guarantees no duplicate records in the Station Dimension.
+
+- **Source Freshness**: Validates that the raw BigQuery data is up to date.
+
+---
+
+## Execution Success & Lineage
+This Directed Acyclic Graph (DAG) illustrates the modular flow from raw staging to the final reporting aggregates.
+
+![dbt Build Success](dbt/images/dbt_success.jpg)
+
+- Verification of 100% pass rate across all 105M row model builds and data quality tests.
 ```
 
 
@@ -335,16 +322,6 @@ A **Kimball-style star schema** is built using **dbt**:
 
 **dim_stations** — Docking station metadata, including lifetime trips originated from each location.
 
----
-### ✅ End-to-End dbt Pipeline Success: Staging to Analytics Marts
-The following screenshot confirms that the dbt pipeline executed successfully in dbt Cloud, passing all schema tests and materializing the Star Schema in BigQuery.
-
-![dbt Build Success](dbt/images/dbt_success.jpg)
-
-### 📈 Modular dbt Architecture & Dependency Mapping
-This lineage graph showcases the Medallion Architecture implemented in dbt, where raw data is decoupled into reusable components before being aggregated into a high-performance monthly station report
-
-![dbt Lineage Graph](dbt/images/dbt_tables.jpg)
 ---
 
 ## Tech Stack
@@ -363,7 +340,6 @@ This lineage graph showcases the Medallion Architecture implemented in dbt, wher
 
 ## Project Structure
 
-```
 london-bikes-data-engineering/
 │
 ├── data_loader/
@@ -409,13 +385,55 @@ The dashboard contains two tiles:
 2. **Dashboard 2: Station Performance & Commuter Flow Diagnostics**  
      ![London Bike Hire Trends](dbt/images/dashboard2.jpg)
 
-3. ## 📊 Live Interactive Dashboard
+3. ### 📊 Live Interactive Dashboard
+   
+[![London Bike Hire Dashboard](dbt/images/dashboard3.jpg)](https://lookerstudio.google.com/reporting/1aee307e-bc0c-4302-9c87-973ce0cf9ac6)
+👉 Click the image above to access the full interactive dashboard.
 
-[![London Bike Hire Dashboard](dbt/images/dashboard1.jpg)](https://lookerstudio.google.com/reporting/1aee307e-bc0c-4302-9c87-973ce0cf9ac6)
+#### 📈 How to Interpret: Station Performance Scatter Plot
 
-> **[Click here to view the full interactive report](https://lookerstudio.google.com/reporting/1aee307e-bc0c-4302-9c87-973ce0cf9ac6)**
+This visualization analyzes the relationship between **Usage Volume** and **User Engagement** across the top 40 London bicycle hubs. Each **bubble** represents a unique station, color-coded by its geographic **Station Area**.
 
+---
 
+#### 1. The Axes (The "What")
+
+- **X-Axis (Total Trips)**  
+  Represents the popularity and throughput of the station.
+
+- **Y-Axis (Average Duration)**  
+  Represents the "trip intent." Higher values suggest leisure or long-distance commuting; lower values suggest short "last-mile" transit.
+
+- **Bubble Size (Total Hours Used)**  
+  Shows the cumulative impact of that station on fleet usage and wear.
+
+---
+
+#### 2. The Quadrants (The "So What?")
+
+- **Upper Right — "Leisure Giants"**  
+  High volume + high duration  
+  Typically stations near parks (e.g., Hyde Park). High traffic with longer ride times.
+
+- **Lower Right — "Commuter Hubs"**  
+  High volume + low duration  
+  Workhorse stations near major rail terminals (e.g., Waterloo, Marylebone). High turnover, short trips.
+
+- **Upper Left — "Specialists"**  
+  Low volume + high duration  
+  Stations in outer areas where trips are less frequent but significantly longer.
+
+---
+
+#### 3. The Color Logic (The "Where")
+
+- Stations are grouped by **Station Area** (derived via dbt string parsing).
+- This enables geographic comparison of behavior patterns.
+
+**Example Insight:**  
+Do *Central* stations consistently have shorter trip durations than *East* stations?
+
+Explore the full interactive report for trends, station rankings, and performance insights.
 ---
 ## Run the pipeline
 
