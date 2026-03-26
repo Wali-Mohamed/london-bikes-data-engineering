@@ -336,13 +336,13 @@ A **Kimball-style star schema** is built using **dbt**:
 **dim_stations** — Docking station metadata, including lifetime trips originated from each location.
 
 ---
-### ✅ Build & Test Success
+### ✅ End-to-End dbt Pipeline Success: Staging to Analytics Marts
 The following screenshot confirms that the dbt pipeline executed successfully in dbt Cloud, passing all schema tests and materializing the Star Schema in BigQuery.
 
 ![dbt Build Success](dbt/images/dbt_success.jpg)
 
-### 📈 Data Lineage
-This graph illustrates the transformation flow from raw staging tables to the final dimensions and monthly fact aggregates.
+### 📈 Modular dbt Architecture & Dependency Mapping
+This lineage graph showcases the Medallion Architecture implemented in dbt, where raw data is decoupled into reusable components before being aggregated into a high-performance monthly station report
 
 ![dbt Lineage Graph](dbt/images/dbt_tables.jpg)
 ---
