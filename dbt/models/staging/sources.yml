@@ -1,0 +1,23 @@
+version: 2
+
+sources:
+  - name: raw_data
+    description: "Raw Santander Bicycle trip data and metadata stored in BigQuery."
+    database: santander-bikes-pipeline  # Your BigQuery Project ID
+    schema: london_bikes_dw            # Your BigQuery Dataset
+    
+    tables:
+      - name: trips_partitioned
+        description: "The primary fact table containing historical journey records."
+        columns:
+          - name: start_time
+            description: "Timestamp for the start of the trip."
+            tests:
+              - not_null
+          - name: start_station_name
+            description: "Raw name string used to parse out the 'Station Area'."
+          - name: duration_seconds
+            description: "Trip duration used for calculating averages in marts."
+
+      - name: station_metadata
+        description: "Optional lookup table for station-specific attributes."
