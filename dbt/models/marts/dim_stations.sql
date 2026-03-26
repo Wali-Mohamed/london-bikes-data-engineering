@@ -12,3 +12,4 @@ SELECT
     COUNT(*) AS lifetime_trips_to_date 
 FROM {{ ref('stg_trips') }}
 GROUP BY 1, 2, 3
+

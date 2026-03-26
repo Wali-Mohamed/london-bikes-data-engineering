@@ -1,5 +1,6 @@
 {{ config(materialized='table') }}
 
+
 SELECT
     DATE_TRUNC(start_time, MONTH) as month_date,
     start_station_id as station_key,

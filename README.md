@@ -1,4 +1,4 @@
-# 🚲 TfL Santander Cycles — Batch Data Pipeline
+#  TfL Santander Cycles — Batch Data Pipeline
 
 > Built a production-style Spark pipeline processing 100M+ bike trips, resolving schema drift, inconsistent timestamp formats, and data loss issues.
 
@@ -233,54 +233,119 @@ PySpark performs distributed processing on the raw datasets:
 
 ---
 
-## Data Warehouse (BigQuery + dbt)
+## Data Warehouse Optimization (BigQuery)
 
-Processed Parquet files are loaded into **BigQuery**.
+To handle **105 Million records** efficiently, I moved beyond a standard "flat" table approach. I implemented a **Native BigQuery Partitioning and Clustering** strategy directly within the PySpark write operation:
 
-Tables are optimized using:
+- **Native Partitioning (`start_time` by DAY):** I utilized BigQuery’s native ingestion-time partitioning on the `start_time` TIMESTAMP column. This enables **Partition Pruning**, allowing the query engine to physically skip data blocks that do not fall within the query's date range.
+- **Clustering (`start_station_id`):** Data within each daily partition is physically sorted and re-organized by the `start_station_id`. This significantly optimizes high-cardinality filtering and station-level aggregations.
 
-- **Partitioning by trip date**
-- **Clustering by station ID**
+## Data Warehouse Performance Benchmarking
+To verify the efficiency of the physical data model, I performed a baseline comparison across three stages of table optimization.
 
-This improves performance for analytical queries used in dashboards.
+Test Query: Count total trips for a specific station on a specific day.
+```sql
+SELECT 
+    start_station_id,
+    COUNT(*) as trip_count,
+    ROUND(AVG(duration_seconds), 2) as avg_duration_seconds,
+    SUM(duration_seconds) as total_seconds
+FROM YOUR_TABLE
+WHERE start_time BETWEEN '2024-01-01 00:00:00' AND '2024-06-30 23:59:59'
+  AND start_station_id = '251'
+GROUP BY 1;
+```
+
+| Version            | Optimization Strategy        | Data Scanned (6-Month Query) | Performance Gain        |
+|-------------------|-----------------------------|------------------------------|--------------------------|
+| Stage 1: Raw      | None (Full Table Scan)      | 2.13 GB                      | Baseline                 |
+| Stage 2: Partitioned | DAY(start_time)          | 94.84 MB                     | 95.5% Saved              |
+| Stage 3: Clustered   | start_station_id         | 93.13 MB                     | 95.6% Total Saving       |
+
+
+---
+## 📊 Analytics Engineering with dbt
+
+### Project Overview
+This project transforms raw bicycle trip data into a clean, tested Star Schema ready for Analysis. The final pipeline processes approximately **105 Million rows** of historical trip data.
+
+### Data Model (Star Schema)
+I refactored the project structure into a dedicated `/dbt` subdirectory to follow mono-repo best practices. The models are organized into a standard layered architecture:
+
+* **Staging (`stg_trips`):** Sanitizes inputs, casts data types, and filters out invalid records (e.g., trips missing `start_station_id`). This ensures the downstream models operate on trustworthy data.
+* **Dimensions (`dim_stations`):** A unique list of all start and end stations, serving as the "Who" and "Where" of our analysis.
+* **Facts (`fact_monthly_trips`):** The core metric table, aggregating trip counts, durations, and distinct station usage on a monthly grain.
+
+### Pipeline Integrity & Testing
+To ensure the 105M row dataset remains reliable, I implemented automated data quality tests in `schema.yml`. Every execution of the pipeline verifies:
+* `not_null`: Ensures critical linking keys like `start_station_id` and `start_time` are populated.
+* `unique`: Confirms the station dimension has no duplicate records.
+
+### Lineage and Execution Success
+The following image demonstrates the successful execution of the entire pipeline, including the green checkmarks for all model builds and data quality tests. This proves the end-to-end integrity of the 105M row transformation.
+
+![dbt Build Success](https://github.com/[YOUR-USERNAME]/[YOUR-REPO]/blob/main/images/dbt_build_success.png?raw=true)
+
+> **Pro-Tip:** Remember to replace `[YOUR-USERNAME]` and `[YOUR-REPO]` with your actual GitHub details!
+
 ---
 
+### How to Reproduce this Project
+
+#### Prerequisites
+1.  A Google Cloud Project with BigQuery enabled.
+2.  The raw London Bicycle Trips dataset loaded into a BigQuery dataset (e.g., `london_bicycles_raw`).
+3.  A dbt Cloud account connected to your BigQuery project.
+
+#### Execution Steps
+1.  Clone this r---epository.
+2.  In dbt Cloud, ensure your **Project Subdirectory** is set to `dbt`.
+3.  Run the following command in the dbt Cloud IDE to build and test the entire Star Schema:
+    ```bash
+    dbt build
+    ```
+---
 ## Data Model
 
 ```mermaid
 
 erDiagram
 
-FACT_TRIPS {
-    string trip_id
-    datetime start_time
-    datetime end_time
-    int duration
-    string start_station_id
-    string end_station_id
-    string bike_type
-}
+    FACT_MONTHLY_TRIPS {
+            date trip_month
+            string start_station_id FK
+            int total_trips
+            float avg_duration
+    }
 
-DIM_STATIONS {
-    string station_id
-    string station_name
-    float latitude
-    float longitude
-    int capacity
-}
+    DIM_STATIONS {
+        string station_key PK
+        string start_station_name
+        int lifetime_trips_originated
+    }
 
-FACT_TRIPS }o--|| DIM_STATIONS : start_station_id
-FACT_TRIPS }o--|| DIM_STATIONS : end_station_id
+    FACT_MONTHLY_TRIPS }o--|| DIM_STATIONS : "joins on start_station_id = station_key"
 
 ```
+
+
 A **Kimball-style star schema** is built using **dbt**:
 
+**fact_monthly_trips** — Monthly aggregates of trip volume and average duration.
 
-- **fact_trips** — trip-level transactional records  
-- **dim_stations** — docking station metadata  
+**dim_stations** — Docking station metadata, including lifetime trips originated from each location.
 
 ---
+### ✅ Build & Test Success
+The following screenshot confirms that the dbt pipeline executed successfully in dbt Cloud, passing all schema tests and materializing the Star Schema in BigQuery.
 
+![dbt Build Success](dbt/images/dbt_success.jpg)
+
+### 📈 Data Lineage
+This graph illustrates the transformation flow from raw staging tables to the final dimensions and monthly fact aggregates.
+
+![dbt Lineage Graph](dbt/images/dbt_tables.jpg)
+---
 
 ## Tech Stack
 
