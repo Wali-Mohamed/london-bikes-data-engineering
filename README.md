@@ -395,7 +395,7 @@ london-bikes-data-engineering/
 └── README.md
 ```
 
-## Dashboard (Looker Studio)
+## Dashboards (Looker Studio)
 
 The dashboard visualises system usage patterns and operational insights
 for the Santander Cycles network.
@@ -403,12 +403,17 @@ for the Santander Cycles network.
 
 The dashboard contains two tiles:
 
-1. **Temporal Distribution**  
-   Trip volume over time, highlighting peak demand periods.
+1. **Dashboard 1: London Bike Hire Trends (2015 – 2025)**  
+  ![London Bike Hire Trends](dbt/images/dashboard1.jpg)
 
-2. **Categorical Distribution**  
-   Net bike flow by station, identifying rebalancing hotspots and comparing **E-bike vs standard bike usage**.
+2. **Dashboard 2: Station Performance & Commuter Flow Diagnostics**  
+     ![London Bike Hire Trends](dbt/images/dashboard2.jpg)
 
+3. ## 📊 Live Interactive Dashboard
+
+[![London Bike Hire Dashboard](dbt/images/dashboard1.jpg)](https://lookerstudio.google.com/reporting/1aee307e-bc0c-4302-9c87-973ce0cf9ac6)
+
+> **[Click here to view the full interactive report](https://lookerstudio.google.com/reporting/1aee307e-bc0c-4302-9c87-973ce0cf9ac6)**
 
 
 ---
