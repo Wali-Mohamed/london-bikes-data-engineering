@@ -106,5 +106,10 @@ Thumbs.db
 target/
 dbt_packages/
 logs/
+seeds
+macros
+snapshots
+target
+test
 # end dbt Cloud content
 dbt_internal_packages/
