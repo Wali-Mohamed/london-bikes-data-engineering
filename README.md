@@ -353,11 +353,13 @@ erDiagram
         float total_hours_used
     }
 
+   
+
     STG_TRIPS ||--o{ DIM_STATIONS : builds
     STG_TRIPS ||--o{ FACT_MONTHLY_TRIPS : aggregates
-    DIM_STATIONS ||--o{ FACT_MONTHLY_TRIPS : enriches
-    FACT_MONTHLY_TRIPS ||--|| RPT_MONTHLY_STATION_PERFORMANCE : feeds
-    DIM_STATIONS ||--|| RPT_MONTHLY_STATION_PERFORMANCE : joins
+
+    DIM_STATIONS ||--o{ RPT_MONTHLY_STATION_PERFORMANCE : joins
+    FACT_MONTHLY_TRIPS ||--o{ RPT_MONTHLY_STATION_PERFORMANCE : joins
 ```
 
 
