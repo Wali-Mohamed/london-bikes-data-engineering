@@ -378,7 +378,7 @@ erDiagram
 ---
 
 ## Project Structure
-
+```
 london-bikes-data-engineering/
 │
 ├── data_loader/
