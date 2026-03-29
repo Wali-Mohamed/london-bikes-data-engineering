@@ -271,12 +271,6 @@ This project transforms 105 million rows of raw London Bicycle trip data into a 
 
 ---
 
-## 📊 Interactive Analytics Dashboard
-**View Live Looker Studio Report**
-
-Explore decade-long trends, station popularity rankings, and geographic performance diagnostics.
-
----
 
 ## Data Model (Medallion Architecture)
 I implemented a three-layer transformation strategy to ensure scalability and performance:
@@ -313,16 +307,59 @@ This Directed Acyclic Graph (DAG) illustrates the modular flow from raw staging 
 ![dbt Build Success](./dbt/images/dbt_success.jpg)
 
 - Verification of 100% pass rate across all 105M row model builds and data quality tests.
-```
 
+
+---
 
 A **Kimball-style star schema** is built using **dbt**:
 
 **fact_monthly_trips** — Monthly aggregates of trip volume and average duration.
 
-**dim_stations** — Docking station metadata, including lifetime trips originated from each location.
+**dim_stations** — Docking station metadata, including station name and geographic area.
 
----
+**rpt_monthly_station_performance** — A denormalised reporting table that joins fact and dimension data, optimised for analytics and visualisation.
+
+```mermaid
+erDiagram
+    STG_TRIPS {
+        timestamp start_time
+        int station_id
+        string station_name
+        int duration_seconds
+        float duration_minutes
+    }
+
+    DIM_STATIONS {
+        int station_id PK
+        string station_name
+        string station_area
+    }
+
+    FACT_MONTHLY_TRIPS {
+        date month PK
+        int station_id PK
+        int total_trips
+        float avg_duration_mins
+        float total_hours_used
+    }
+
+    RPT_MONTHLY_STATION_PERFORMANCE {
+        date month
+        int station_id
+        string station_name
+        string station_area
+        int total_trips
+        float avg_duration_mins
+        float total_hours_used
+    }
+
+    STG_TRIPS ||--o{ DIM_STATIONS : builds
+    STG_TRIPS ||--o{ FACT_MONTHLY_TRIPS : aggregates
+    DIM_STATIONS ||--o{ FACT_MONTHLY_TRIPS : enriches
+    FACT_MONTHLY_TRIPS ||--|| RPT_MONTHLY_STATION_PERFORMANCE : feeds
+    DIM_STATIONS ||--|| RPT_MONTHLY_STATION_PERFORMANCE : joins
+```
+
 
 ## Tech Stack
 
@@ -370,6 +407,7 @@ london-bikes-data-engineering/
 ├── .gitignore
 └── README.md
 ```
+
 
 ## Dashboards (Looker Studio)
 
