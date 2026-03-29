@@ -288,7 +288,7 @@ I implemented a three-layer transformation strategy to ensure scalability and pe
 - **Marts (`fact_monthly_trips`)**: Aggregates core metrics—trip counts, average durations, and total hours used—at a monthly grain for high-speed querying.
 
 - **Reporting (`rpt_monthly_station_performance`)**: The "Gold" layer. A pre-joined table that combines facts and dimensions, optimized specifically for the Looker Studio scatter plots and station rankings.
-![dbt Lineage Graph](dbt/images/dbt_tables.jpg)
+![dbt Lineage Graph](./dbt/images/dbt_tables.jpg)
 ---
 
 ## Pipeline Integrity & Lineage
@@ -310,7 +310,7 @@ Every execution verifies:
 ## Execution Success & Lineage
 This Directed Acyclic Graph (DAG) illustrates the modular flow from raw staging to the final reporting aggregates.
 
-![dbt Build Success](dbt/images/dbt_success.jpg)
+![dbt Build Success](./dbt/images/dbt_success.jpg)
 
 - Verification of 100% pass rate across all 105M row model builds and data quality tests.
 ```
@@ -380,14 +380,14 @@ for the Santander Cycles network.
 The dashboard contains two tiles:
 
 1. **Dashboard 1: London Bike Hire Trends (2015 – 2025)**  
-  ![London Bike Hire Trends](dbt/images/dashboard1.jpg)
+  ![London Bike Hire Trends](./dbt/images/dashboard1.jpg)
 
 2. **Dashboard 2: Station Performance & Commuter Flow Diagnostics**  
-     ![London Bike Hire Trends](dbt/images/dashboard2.jpg)
+     ![London Bike Hire Trends](./dbt/images/dashboard2.jpg)
 
 3. ### 📊 Live Interactive Dashboard
    
-[![London Bike Hire Dashboard](dbt/images/dashboard3.jpg)](https://lookerstudio.google.com/reporting/1aee307e-bc0c-4302-9c87-973ce0cf9ac6)
+[![London Bike Hire Dashboard](./dbt/images/dashboard3.jpg)](https://lookerstudio.google.com/reporting/1aee307e-bc0c-4302-9c87-973ce0cf9ac6)
 👉 Click the image above to access the full interactive dashboard.
 
 #### 📈 How to Interpret: Station Performance Scatter Plot
