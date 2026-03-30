@@ -45,16 +45,47 @@ def download_file(url):
         print("Skipping:", filename)
         return
 
-    print("Downloading:", filename)
-    print("ABS PATH:", os.path.abspath(filepath))
-    print("FOLDER:", DOWNLOAD_FOLDER)
-  
+        print("Downloading:", filename)
+        print("PATH:", filepath)
 
-    r = requests.get(url, stream=True)
+    try:
+        r = requests.get(url, stream=True, timeout=30)
+        print("STATUS:", r.status_code)
+
+        r.raise_for_status()
+
+        bytes_written = 0
+
+        with open(filepath, "wb") as f:
+            for chunk in r.iter_content(chunk_size=8192):
+                if chunk:
+                    f.write(chunk)
+                    bytes_written += len(chunk)
+
+        print("BYTES WRITTEN:", bytes_written)
+
+        if bytes_written == 0:
+            print("WARNING: EMPTY FILE")
+
+    except Exception as e:
+        print("ERROR:", filename, str(e))
+
+
+    r = requests.get(url, stream=True, timeout=30)
+    r.raise_for_status()
+
+    bytes_written = 0
 
     with open(filepath, "wb") as f:
         for chunk in r.iter_content(chunk_size=8192):
-            f.write(chunk)
+            if chunk:
+                f.write(chunk)
+                bytes_written += len(chunk)
+
+    print(f"Downloaded {filename} - {bytes_written} bytes")
+
+    if bytes_written == 0:
+        raise Exception(f"Empty file downloaded: {filename}")
 
 
 def main():

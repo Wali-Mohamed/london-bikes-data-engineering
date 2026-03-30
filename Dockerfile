@@ -2,6 +2,10 @@ FROM apache/airflow:2.9.3-python3.11
 
 USER root
 
+RUN mkdir -p /opt/airflow/data/raw_test && \
+    chown -R airflow /opt/airflow/data
+
+
 # 1. Install OpenJDK 11 (Better compatibility for Spark 3.5)
 RUN apt-get update && \
     apt-get install -y --no-install-recommends openjdk-17-jdk-headless && \
