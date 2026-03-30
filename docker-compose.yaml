@@ -11,6 +11,7 @@ x-airflow-common: &airflow-common
     - GCP_GCS_BUCKET=${GCP_GCS_BUCKET}
     - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS}
   volumes:
+    - ./data:/opt/airflow/data
     - ./data_loader/dags:/opt/airflow/dags
     - ./data_loader/logs:/opt/airflow/logs
     - ./data_loader/plugins:/opt/airflow/plugins

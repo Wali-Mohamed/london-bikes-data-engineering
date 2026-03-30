@@ -66,3 +66,8 @@ count files
 ```
 gcloud storage ls "gs://london_bikes_data_lake_santander-bikes-pipeline/silver/*.parquet" | wc -l
 ```
+docker check files
+
+```
+docker exec -it london-bikes-data-engineering-airflow-scheduler-1 bash
+```

@@ -4,8 +4,8 @@ import gcsfs
 # 1. Define your Bucket Paths
 # Replace 'your-bucket-name' with london_bikes_data_lake_santander-bikes-pipeline
 BUCKET_NAME = "london_bikes_data_lake_santander-bikes-pipeline"
-RAW_GCS_PATH = f"gs://{BUCKET_NAME}/raw/"
-SILVER_GCS_PATH = f"gs://{BUCKET_NAME}/silver/"
+RAW_GCS_PATH = f"gs://{BUCKET_NAME}/raw_test/"
+SILVER_GCS_PATH = f"gs://{BUCKET_NAME}/silver_test/"
 
 TARGET_COLUMNS = [
     "ride_id", "start_time", "start_station_id", "start_station_name",

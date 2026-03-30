@@ -5,11 +5,15 @@ from pyspark.sql.types import StructType, StructField, StringType, LongType, Int
 # No master("local") or hardcoded memory here; Dataproc handles that.
 spark = SparkSession.builder \
     .appName("Silver_to_Gold_BigQuery") \
+    .config("spark.jars", "/opt/airflow/plugins/gcs-connector.jar") \
+    .config("spark.hadoop.fs.gs.impl", "com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystem") \
+    .config("spark.hadoop.google.cloud.auth.service.account.enable", "true") \
+    .config("spark.hadoop.google.cloud.auth.service.account.json.keyfile", "/tmp/google_credentials.json") \
     .getOrCreate()
 
 # 2. Define Cloud Paths
 BUCKET = "london_bikes_data_lake_santander-bikes-pipeline"
-INPUT_PATH = f"gs://{BUCKET}/silver/*.parquet"
+INPUT_PATH = f"gs://{BUCKET}/silver_test/*.parquet"
 # Format BigQuery dataset name (usually project_id.dataset_name)
 # We will use the bucket name with underscores as the dataset ID by default
 BQ_DATASET = "london_bikes_dw"
@@ -89,7 +93,7 @@ clean_count = df.count()
 
 # Constants
 MY_BUCKET = "london_bikes_data_lake_santander-bikes-pipeline"
-MY_TABLE = "london_bikes_dw.trips_partitioned"
+MY_TABLE = "london_bikes_dw.trips_partitioned_test"
 
 # The "Full Marks" Write Operation
 df.write.format("bigquery") \
