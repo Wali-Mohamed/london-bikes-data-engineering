@@ -2,7 +2,7 @@ FROM apache/airflow:2.9.3-python3.11
 
 USER root
 
-RUN mkdir -p /opt/airflow/data/raw_test && \
+RUN mkdir -p /opt/airflow/data && \
     chown -R airflow /opt/airflow/data
 
 

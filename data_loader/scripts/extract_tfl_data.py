@@ -8,7 +8,7 @@ BASE_URL = "https://cycling.data.tfl.gov.uk/"
 S3_API = "https://s3-eu-west-1.amazonaws.com/cycling.data.tfl.gov.uk?list-type=2"
 
 
-DOWNLOAD_FOLDER = "/opt/airflow/data/raw_test"
+DOWNLOAD_FOLDER = "/opt/airflow/data"
 os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
 
 

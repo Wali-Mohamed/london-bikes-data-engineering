@@ -2,7 +2,7 @@ from google.cloud import storage
 import os
 
 BUCKET_NAME = os.environ["GCP_GCS_BUCKET"]
-LOCAL_FOLDER = "/opt/airflow/data/raw_test"
+LOCAL_FOLDER = "/opt/airflow/data"
 
 def upload_folder():
     client = storage.Client()
