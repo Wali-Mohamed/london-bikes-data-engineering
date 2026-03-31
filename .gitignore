@@ -16,9 +16,8 @@ google_credentials.json
 
 # -----------------------------
 
-data/raw/*
-data/clean
-data/curated
+data/*
+
 *.csv
 *.parquet
 *.parquet.crc

@@ -47,6 +47,7 @@ services:
 
   airflow-webserver:
     <<: *airflow-common
+    user: "${UID}:0"
     restart: always
     depends_on:
       postgres:
@@ -59,6 +60,7 @@ services:
 
   airflow-scheduler:
     <<: *airflow-common
+    user: "${UID}:0"
     restart: always
     depends_on:
       postgres:

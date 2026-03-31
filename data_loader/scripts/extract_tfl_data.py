@@ -41,12 +41,12 @@ def download_file(url):
     filename = url.split("/")[-1]
     filepath = os.path.join(DOWNLOAD_FOLDER, filename)
 
-    if os.path.exists(filepath):
+    if os.path.exists(filepath) and os.path.getsize(filepath) > 0:
         print("Skipping:", filename)
         return
 
         print("Downloading:", filename)
-        print("PATH:", filepath)
+        
 
     try:
         r = requests.get(url, stream=True, timeout=30)
@@ -71,22 +71,7 @@ def download_file(url):
         print("ERROR:", filename, str(e))
 
 
-    r = requests.get(url, stream=True, timeout=30)
-    r.raise_for_status()
-
-    bytes_written = 0
-
-    with open(filepath, "wb") as f:
-        for chunk in r.iter_content(chunk_size=8192):
-            if chunk:
-                f.write(chunk)
-                bytes_written += len(chunk)
-
-    print(f"Downloaded {filename} - {bytes_written} bytes")
-
-    if bytes_written == 0:
-        raise Exception(f"Empty file downloaded: {filename}")
-
+   
 
 def main():
 
