@@ -379,35 +379,89 @@ erDiagram
 
 ## Project Structure
 ```
-london-bikes-data-engineering/
+santander-bikes-pipeline/
+│
+├── data/
+│   └── # Local storage for raw or intermediate data (not tracked in Git)
 │
 ├── data_loader/
-│   ├── dags/                     # Airflow DAG definitions
-│   │   └── tfl_bike_ingestion.py
+│   ├── dags/
+│   │   └── airflow_pipeline.py
+│   │       # Defines the Airflow DAG orchestrating the ingestion pipeline
 │   │
-│   └── scripts/                  # Data ingestion scripts
+│   ├── plugins/
+│   │   └── gcs-connector-hadoop3-latest.jar
+│   │       # Enables Spark/Airflow integration with Google Cloud Storage
+│   │
+│   └── scripts/
+│       ├── archive/
+│       │   # Backup/sample data for reproducibility if API is unavailable
+│       │
 │       ├── extract_tfl_data.py
+│       │   # Extracts Santander bike data from TfL API
+│       │
+│       ├── polars_bronze_to_silver_standardizer.py
+│       │   # Cleans and standardises raw data using Polars (Bronze → Silver)
+│       │
 │       └── upload_to_gcs.py
+│           # Uploads processed data to Google Cloud Storage
 │
-├── spark/                        # PySpark transformation jobs
-│   └── transform_trips.py
+├── spark/
+│   ├── archive/
+│   │   # Optional backups or intermediate Spark outputs
+│   │
+│   └── spark_bronze_to_gold_unified_pipeline.py
+│       # Transforms Silver data into Gold layer using Spark
 │
-├── dbt/                          # Analytics models
+├── dbt/
 │   ├── models/
 │   │   ├── staging/
+│   │   │   ├── sources.yml
+│   │   │   │   # Defines external data sources (BigQuery tables)
+│   │   │   │
+│   │   │   ├── stg_trips.sql
+│   │   │   │   # Staging model for cleaned trip-level data
+│   │   │   │
+│   │   │   └── schema.yml
+│   │   │       # Tests and documentation for staging models
+│   │   │
 │   │   └── marts/
+│   │       ├── dim_stations.sql
+│   │       │   # Dimension table with station metadata
+│   │       │
+│   │       ├── fact_monthly_trips.sql
+│   │       │   # Fact table aggregating trips by month
+│   │       │
+│   │       └── rpt_monthly_station_performance.sql
+│   │           # Final reporting model combining facts and dimensions
+│   │
 │   └── dbt_project.yml
+│       # dbt project configuration
 │
-├── terraform/                    # Infrastructure as Code
+├── terraform/
 │   ├── main.tf
-│   ├── variables.tf
-│   └── outputs.tf
+│   │   # Defines core infrastructure (GCS bucket, BigQuery dataset)
+│   │
+│   ├── provider.tf
+│   │   # Configures GCP provider
+│   │
+│   └── variables.tf
+│       # Input variables for infrastructure configuration
 │
-├── docker-compose.yaml           # Local Airflow environment
-├── commands.md                   # Useful project commands
-├── .env                          # Environment variables
-├── .gitignore
+├── docker-compose.yaml
+│   # Orchestrates Airflow and supporting services
+│
+├── Dockerfile
+│   # Custom image with dependencies (Spark, Python libs, connectors)
+│
+├── profiles.yml
+│   # dbt connection configuration for BigQuery
+│
+├── .env
+│   # Environment variables (not committed)
+│
 └── README.md
+    # Project documentation and reproducibility instructions
 ```
 
 
@@ -473,27 +527,125 @@ This visualization analyzes the relationship between **Usage Volume** and **User
 **Example Insight:**  
 Do *Central* stations consistently have shorter trip durations than *East* stations?
 
-Explore the full interactive report for trends, station rankings, and performance insights.
+
 ---
-## Run the pipeline
 
-1. Clone repo
+### Reproducibility Guide
 
-git clone https://github.com/username/london-bikes-pipeline
+Follow the steps below to reproduce the full data pipeline end-to-end.
 
-2. Create environment
+#### 1. Clone the Repository
 
-uv sync
+```bash
+git clone https://github.com/dataengineer-wali/santander-bikes-pipeline.git
+cd santander-bikes-pipeline
+```
 
-3. Start services
+---
 
-docker compose up -d
+#### 2. Set Up GCP Credentials
 
-4. Run terraform
+* Create a Service Account in GCP with:
 
+  * BigQuery Admin (or sufficient access)
+  * Storage Admin
+
+* Download the JSON key file
+
+* Place it in the root directory and rename it:
+
+  `google_credentials.json`
+
+* Set environment variable:
+
+```bash
+export GOOGLE_APPLICATION_CREDENTIALS=google_credentials.json
+```
+
+---
+
+#### 3. Configure Environment Variables
+
+Create a `.env` file in the root directory:
+
+```bash
+GCP_PROJECT_ID=<your-project-id>
+GCP_GCS_BUCKET=<your-bucket-name>
+BIGQUERY_DATASET=<your-dataset-name>
+```
+
+Ensure `.gitignore` includes:
+
+```
+*.json
+.env
+```
+
+---
+
+#### 4. Provision Infrastructure (Terraform)
+
+```bash
+cd terraform
 terraform init
 terraform apply
+```
 
-5. Run airflow DAG
+This creates:
 
-open http://localhost:8080
+* GCS bucket
+* BigQuery dataset
+
+---
+
+#### 5. Build and Run Services (Docker + Airflow)
+
+```bash
+docker-compose build --no-cache
+docker-compose up -d
+```
+
+Airflow UI:
+http://localhost:8080
+
+---
+
+#### 6. Run the Pipeline
+
+* Enable DAG: `tfl_bike_ingestion`
+* Trigger manually or wait for schedule
+
+Pipeline flow:
+
+* Extract TfL data
+* Upload to GCS (Bronze)
+* Transform with Polars (Silver)
+* Process with Spark (Gold)
+* Load into BigQuery
+
+---
+
+#### 7. Run dbt Models
+
+```bash
+cd dbt
+dbt run
+dbt test
+```
+
+---
+
+#### 8. Validate Output
+
+Check BigQuery for:
+
+* `fact_monthly_trips`
+* `dim_stations`
+* `rpt_monthly_station_performance`
+
+---
+
+### Notes
+
+* If API fails, use sample data from `archive/`
+* Ensure Docker has enough memory
