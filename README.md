@@ -626,17 +626,25 @@ Pipeline flow:
 
 #### 7. Run dbt Models
 
+# Download uv from root folder
 ```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
 # install dependencies from uv
+```bash
 uv sync
-# get variable from .env file
+```
+# get variable from .env file 
+```bash
+# from root folder
 export $(grep -v '^#' .env | xargs)
-
+```
+```bash
 # change to dbt directory
 cd dbt
 uv run dbt build
-
 ```
+
 
 ---
 
