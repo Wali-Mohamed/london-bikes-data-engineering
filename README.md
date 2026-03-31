@@ -547,7 +547,12 @@ cd santander-bikes-pipeline
 * Create a Service Account in GCP with:
 
   * BigQuery Admin (or sufficient access)
-  * Storage Admin
+  * BigQuery Job User (to run the job)
+  * BigQuery Data Editor (to write the results)
+   *BigQuery User
+   * Storage Admin
+   * Dataproc Admin
+   * Compute Admin
 
 * Download the JSON key file
 
@@ -568,9 +573,11 @@ export GOOGLE_APPLICATION_CREDENTIALS=google_credentials.json
 Create a `.env` file in the root directory:
 
 ```bash
+AIRFLOW__CORE__FERNET_KEY=
 GCP_PROJECT_ID=<your-project-id>
 GCP_GCS_BUCKET=<your-bucket-name>
 BIGQUERY_DATASET=<your-dataset-name>
+GOOGLE_APPLICATION_CREDENTIALS=/tmp/google_credentials.json
 ```
 
 Ensure `.gitignore` includes:
@@ -626,15 +633,15 @@ Pipeline flow:
 
 #### 7. Run dbt Models
 
-# Download uv from root folder
+#### Download uv from root folder
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
-# install dependencies from uv
+#### install dependencies from uv
 ```bash
 uv sync
 ```
-# get variable from .env file 
+#### get variable from .env file 
 ```bash
 # from root folder
 export $(grep -v '^#' .env | xargs)
