@@ -434,7 +434,8 @@ santander-bikes-pipeline/
 │   │       │
 │   │       └── rpt_monthly_station_performance.sql
 │   │           # Final reporting model combining facts and dimensions
-│   │
+│   │___ profiles.yml 
+|   |
 │   └── dbt_project.yml
 │       # dbt project configuration
 │
@@ -454,8 +455,6 @@ santander-bikes-pipeline/
 ├── Dockerfile
 │   # Custom image with dependencies (Spark, Python libs, connectors)
 │
-├── profiles.yml
-│   # dbt connection configuration for BigQuery
 │
 ├── .env
 │   # Environment variables (not committed)
@@ -628,9 +627,15 @@ Pipeline flow:
 #### 7. Run dbt Models
 
 ```bash
+# install dependencies from uv
+uv sync
+# get variable from .env file
+export $(grep -v '^#' .env | xargs)
+
+# change to dbt directory
 cd dbt
-dbt run
-dbt test
+uv run dbt build
+
 ```
 
 ---
