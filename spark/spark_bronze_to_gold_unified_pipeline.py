@@ -5,7 +5,7 @@ from pyspark.sql.types import StructType, StructField, StringType, LongType, Int
 # No master("local") or hardcoded memory here; Dataproc handles that.
 spark = SparkSession.builder \
     .appName("Silver_to_Gold_BigQuery") \
-    .config("spark.jars", "/opt/airflow/plugins/gcs-connector.jar") \
+    .config("spark.jars", "/opt/airflow/plugins/gcs-connector-hadoop3-latest.jar") \
     .config("spark.hadoop.fs.gs.impl", "com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystem") \
     .config("spark.hadoop.google.cloud.auth.service.account.enable", "true") \
     .config("spark.hadoop.google.cloud.auth.service.account.json.keyfile", "/tmp/google_credentials.json") \
